@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#9a5d9f">
+  <title>我的心动方向地图｜无穷指述</title>
+  <style>
+    :root {
+      --ink: #382f3d;
+      --muted: #786d7b;
+      --paper: #fffafc;
+      --rose: #f4d8ea;
+      --rose-2: #fff0f7;
+      --lav: #dcd3f5;
+      --lav-2: #f3efff;
+      --purple: #915999;
+      --purple-dark: #6f3f77;
+      --line: rgba(111, 63, 119, .15);
+      --shadow: 0 20px 60px rgba(96, 55, 101, .12);
+      --radius: 26px;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-height: 100%; background: #f7eaf3; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(circle at 8% 4%, rgba(255,255,255,.95) 0 7%, transparent 24%),
+        radial-gradient(circle at 94% 15%, rgba(221,207,246,.8) 0 5%, transparent 27%),
+        linear-gradient(155deg, #f9e5f1 0%, #f1e6fb 50%, #fff8fb 100%);
+    }
+
+    button { font: inherit; }
+    .app { width: min(100%, 720px); min-height: 100vh; margin: 0 auto; padding: 18px 16px calc(28px + env(safe-area-inset-bottom)); }
+    .brand { display: flex; justify-content: space-between; align-items: center; min-height: 36px; margin-bottom: 14px; }
+    .brand-name { font-size: 13px; font-weight: 800; letter-spacing: .12em; color: var(--purple-dark); }
+    .privacy-pill { border: 1px solid var(--line); background: rgba(255,255,255,.62); color: var(--muted); padding: 7px 10px; border-radius: 999px; font-size: 12px; }
+
+    .panel {
+      position: relative;
+      overflow: hidden;
+      min-height: calc(100vh - 86px);
+      background: rgba(255, 250, 252, .92);
+      border: 1px solid rgba(255,255,255,.9);
+      border-radius: 32px;
+      box-shadow: var(--shadow);
+    }
+    .screen { display: none; min-height: calc(100vh - 88px); padding: 30px 24px; }
+    .screen.active { display: flex; flex-direction: column; animation: rise .35s ease both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+
+    .hero-art { position: relative; height: 184px; margin: -30px -24px 22px; overflow: hidden; background: linear-gradient(145deg, #f2cae4, #d9cdf5); }
+    .blob { position: absolute; border-radius: 50%; filter: blur(.2px); }
+    .blob.a { width: 240px; height: 240px; left: -78px; top: -120px; background: rgba(255,255,255,.5); }
+    .blob.b { width: 205px; height: 205px; right: -88px; bottom: -93px; background: rgba(153,89,158,.24); }
+    .orbit { position: absolute; width: 152px; height: 152px; left: calc(50% - 76px); top: 17px; border: 2px solid rgba(255,255,255,.64); border-radius: 50%; }
+    .orbit::before, .orbit::after { content: ""; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: white; box-shadow: 0 5px 18px rgba(99,53,105,.18); }
+    .orbit::before { left: 10px; top: 22px; }
+    .orbit::after { right: 8px; bottom: 25px; background: var(--purple); }
+    .heart { position: absolute; inset: 0; display: grid; place-items: center; font-size: 66px; color: rgba(255,255,255,.93); text-shadow: 0 8px 30px rgba(100,54,105,.2); transform: translateY(-4px); }
+
+    .eyebrow { margin: 0 0 10px; color: var(--purple); font-size: 12px; font-weight: 850; letter-spacing: .16em; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 14px; font-size: clamp(31px, 8vw, 45px); line-height: 1.13; letter-spacing: -.04em; }
+    h2 { margin-bottom: 12px; font-size: clamp(24px, 6vw, 34px); line-height: 1.28; }
+    .lead { color: var(--muted); line-height: 1.75; font-size: 15px; }
+    .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 18px 0; }
+    .fact { padding: 13px 8px; border-radius: 16px; background: var(--rose-2); text-align: center; }
+    .fact b { display: block; margin-bottom: 3px; color: var(--purple-dark); font-size: 18px; }
+    .fact span { color: var(--muted); font-size: 11px; }
+    .notice { padding: 14px 15px; border-left: 3px solid #c184bc; border-radius: 12px; background: var(--lav-2); color: #615668; font-size: 12px; line-height: 1.65; }
+    .actions { margin-top: auto; padding-top: 22px; display: grid; gap: 10px; }
+    .btn { min-height: 52px; border: 0; border-radius: 17px; cursor: pointer; transition: transform .15s ease, opacity .15s ease; }
+    .btn:active { transform: scale(.985); }
+    .btn-primary { background: linear-gradient(135deg, var(--purple), #b975aa); color: white; font-weight: 800; box-shadow: 0 11px 25px rgba(126,69,132,.25); }
+    .btn-secondary { background: white; border: 1px solid var(--line); color: var(--purple-dark); font-weight: 700; }
+    .btn-text { min-height: 38px; background: transparent; color: var(--muted); font-size: 13px; }
+
+    .quiz-head { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; }
+    .icon-btn { width: 42px; height: 42px; border: 1px solid var(--line); border-radius: 50%; background: white; color: var(--purple-dark); cursor: pointer; }
+    .progress { height: 7px; overflow: hidden; border-radius: 99px; background: #eee4ed; }
+    .progress > i { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #ca8aba, #8d5aa0); transition: width .25s ease; }
+    .count { min-width: 45px; text-align: right; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+    .question-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 30px 0 22px; }
+    .dimension { margin-bottom: 14px; color: var(--purple); font-size: 12px; font-weight: 800; letter-spacing: .12em; }
+    .question { margin-bottom: 10px; font-size: clamp(24px, 6.5vw, 34px); line-height: 1.46; letter-spacing: -.025em; }
+    .hint { color: var(--muted); font-size: 13px; line-height: 1.65; }
+    .options { display: grid; gap: 9px; }
+    .option { display: grid; grid-template-columns: 30px 1fr; align-items: center; gap: 12px; min-height: 54px; padding: 10px 15px; border: 1px solid var(--line); border-radius: 17px; background: white; color: var(--ink); text-align: left; cursor: pointer; transition: .16s ease; }
+    .option:hover, .option.selected { border-color: rgba(145,89,153,.48); background: var(--rose-2); transform: translateY(-1px); }
+    .dot { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--lav-2); color: var(--purple); font-weight: 850; font-size: 12px; }
+
+    .loading { align-items: center; justify-content: center; text-align: center; }
+    .pulse { width: 92px; height: 92px; display: grid; place-items: center; margin-bottom: 24px; border-radius: 50%; color: white; font-size: 39px; background: linear-gradient(145deg, #cf8ebd, #8c5898); box-shadow: 0 0 0 0 rgba(145,89,153,.26); animation: pulse 1.4s infinite; }
+    @keyframes pulse { 70% { box-shadow: 0 0 0 24px rgba(145,89,153,0); } 100% { box-shadow: 0 0 0 0 rgba(145,89,153,0); } }
+
+    .result-screen { padding: 0; }
+    .result-cover { padding: 30px 24px 25px; color: white; background: linear-gradient(145deg, #805189 0%, #b573a7 60%, #cf98bb 100%); }
+    .result-cover .eyebrow { color: rgba(255,255,255,.75); }
+    .result-kicker { font-size: 13px; opacity: .8; }
+    .result-title { margin: 8px 0 10px; font-size: clamp(28px, 7vw, 39px); line-height: 1.2; }
+    .result-desc { margin: 0; max-width: 570px; opacity: .9; line-height: 1.72; font-size: 14px; }
+    .result-body { padding: 24px; }
+    .score-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-bottom: 24px; }
+    .score-card { padding: 17px 15px; border-radius: 19px; background: var(--rose-2); }
+    .score-card.other { background: var(--lav-2); }
+    .score-label { color: var(--muted); font-size: 12px; }
+    .score-num { display: flex; align-items: baseline; gap: 3px; margin-top: 6px; color: var(--purple-dark); }
+    .score-num b { font-size: 32px; }
+    .score-num span { font-size: 12px; }
+    .section-title { margin: 26px 0 13px; font-size: 18px; }
+    .bars { display: grid; gap: 14px; }
+    .bar-row { display: grid; grid-template-columns: 70px 1fr; gap: 10px; align-items: center; }
+    .bar-label { color: #5f5462; font-size: 12px; font-weight: 700; }
+    .tracks { display: grid; gap: 5px; }
+    .track { position: relative; height: 11px; border-radius: 99px; background: #eee7ed; overflow: hidden; }
+    .fill { display: block; height: 100%; width: 0; border-radius: inherit; transition: width .8s ease .15s; }
+    .fill.same { background: linear-gradient(90deg, #d285b7, #a95e98); }
+    .fill.other { background: linear-gradient(90deg, #b7a7df, #8068bc); }
+    .legend { display: flex; gap: 16px; margin: 12px 0 0 80px; color: var(--muted); font-size: 11px; }
+    .legend span::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 5px; border-radius: 50%; background: #b96ca4; }
+    .legend span:last-child::before { background: #8c77c5; }
+    .reflection { padding: 17px; border-radius: 18px; background: #fbf5fa; border: 1px solid var(--line); color: #5f5363; font-size: 13px; line-height: 1.72; }
+    .result-note { margin-top: 18px; color: var(--muted); font-size: 11px; line-height: 1.65; }
+    .result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 22px; }
+    .result-actions .wide { grid-column: 1 / -1; }
+    .copied { position: fixed; left: 50%; bottom: 28px; z-index: 9; transform: translate(-50%, 20px); padding: 10px 15px; border-radius: 999px; background: #3f3442; color: white; font-size: 12px; opacity: 0; pointer-events: none; transition: .25s ease; }
+    .copied.show { opacity: 1; transform: translate(-50%, 0); }
+
+    .modal { position: fixed; inset: 0; z-index: 10; display: none; place-items: end center; padding: 16px; background: rgba(42,31,44,.34); backdrop-filter: blur(5px); }
+    .modal.show { display: grid; }
+    .modal-card { width: min(100%, 680px); padding: 23px; border-radius: 24px; background: white; box-shadow: var(--shadow); }
+    .modal-card h3 { margin-bottom: 10px; }
+    .modal-card p { color: var(--muted); font-size: 13px; line-height: 1.7; }
+
+    @media (min-width: 700px) {
+      .app { padding-top: 30px; }
+      .panel, .screen { min-height: 780px; }
+      .screen { padding: 38px 42px; }
+      .hero-art { margin: -38px -42px 28px; }
+      .result-screen { padding: 0; }
+      .result-cover, .result-body { padding-left: 42px; padding-right: 42px; }
+      .result-cover { padding-top: 42px; }
+      .modal { place-items: center; }
+    }
+
+    @media print {
+      body { background: white; }
+      .app { width: 100%; padding: 0; }
+      .brand, .result-actions, .result-note { display: none !important; }
+      .panel { box-shadow: none; border: 0; border-radius: 0; }
+      .screen { display: none !important; }
+      #resultScreen { display: block !important; min-height: 0; }
+      .result-cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="brand">
+      <div class="brand-name">INFINITELENEX · 无穷指述</div>
+      <div class="privacy-pill">仅保存在本机</div>
+    </header>
+
+    <section class="panel" aria-live="polite">
+      <div class="screen active" id="homeScreen">
+        <div class="hero-art" aria-hidden="true">
+          <div class="blob a"></div><div class="blob b"></div>
+          <div class="orbit"></div><div class="heart">♡</div>
+        </div>
+        <p class="eyebrow">A GENTLE SELF-EXPLORATION</p>
+        <h1>我的心动<br>方向地图</h1>
+        <p class="lead">从不同关系想象中，温柔观察自己的心动、靠近与未来期待。这里没有标准答案，也不需要急着给自己贴标签。</p>
+        <div class="facts">
+          <div class="fact"><b>60</b><span>道选择题</span></div>
+          <div class="fact"><b>6</b><span>个探索维度</span></div>
+          <div class="fact"><b>8′</b><span>大约用时</span></div>
+        </div>
+        <div class="notice">本测试仅供18岁以上用户进行趣味性自我探索，不是心理、医学或性取向诊断。结果无法替你定义身份，也不会上传任何答案。</div>
+        <div class="actions">
+          <button class="btn btn-primary" id="startBtn">开始探索</button>
+          <button class="btn btn-secondary" id="resumeBtn" hidden>继续上次进度</button>
+          <button class="btn btn-text" id="aboutBtn">先了解结果如何生成</button>
+        </div>
+      </div>
+
+      <div class="screen" id="quizScreen">
+        <div class="quiz-head">
+          <button class="icon-btn" id="backBtn" aria-label="返回上一题">←</button>
+          <div class="progress" aria-label="答题进度"><i id="progressBar"></i></div>
+          <span class="count" id="countText">1 / 60</span>
+        </div>
+        <div class="question-wrap">
+          <div class="dimension" id="dimensionText">心动注意</div>
+          <h2 class="question" id="questionText"></h2>
+          <p class="hint">请选择最贴近你近期真实感受的一项，不必按照“应该怎样”作答。</p>
+        </div>
+        <div class="options" id="options"></div>
+      </div>
+
+      <div class="screen loading" id="loadingScreen">
+        <div class="pulse">♡</div>
+        <h2>正在绘制你的心动地图</h2>
+        <p class="lead">答案正在本机完成整理，没有上传到网络。</p>
+      </div>
+
+      <div class="screen result-screen" id="resultScreen">
+        <div class="result-cover">
+          <p class="eyebrow">MY HEART MAP</p>
+          <div class="result-kicker">你的当前探索结果</div>
+          <h2 class="result-title" id="resultTitle"></h2>
+          <p class="result-desc" id="resultDesc"></p>
+        </div>
+        <div class="result-body">
+          <div class="score-compare">
+            <div class="score-card">
+              <div class="score-label">同性方向的综合共鸣</div>
+              <div class="score-num"><b id="sameScore">0</b><span>/ 100</span></div>
+            </div>
+            <div class="score-card other">
+              <div class="score-label">异性方向的综合共鸣</div>
+              <div class="score-num"><b id="otherScore">0</b><span>/ 100</span></div>
+            </div>
+          </div>
+
+          <h3 class="section-title">六个维度的方向</h3>
+          <div class="bars" id="bars"></div>
+          <div class="legend"><span>同性方向</span><span>异性方向</span></div>
+
+          <h3 class="section-title">给此刻的你</h3>
+          <div class="reflection" id="reflection"></div>
+          <p class="result-note">分数只表示你对这组描述的当下共鸣强度，不等于身份比例。人的感受会随经历、关系和自我理解发生变化。请保留定义或暂不定义自己的自由。</p>
+
+          <div class="result-actions">
+            <button class="btn btn-primary wide" id="copyBtn">复制结果摘要</button>
+            <button class="btn btn-secondary" id="printBtn">保存为 PDF</button>
+            <button class="btn btn-secondary" id="restartBtn">重新测试</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="aboutModal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+    <div class="modal-card">
+      <h3 id="aboutTitle">这张地图如何生成？</h3>
+      <p>60道题分别观察你面对同性和异性时，在心动注意、情感靠近、浪漫想象、身体亲近、关系意愿和未来开放六个维度上的共鸣。系统只做对照整理，不会判断哪一种方向“更正确”。</p>
+      <p>所有答案与结果仅保存在当前浏览器中。清除浏览器数据或点击重新测试后，记录就会消失。</p>
+      <button class="btn btn-primary" id="closeAbout" style="width:100%">我知道了</button>
+    </div>
+  </div>
+  <div class="copied" id="toast">结果摘要已复制</div>
+
+  <script>
+    const dimensions = {
+      notice: '心动注意',
+      emotion: '情感靠近',
+      romance: '浪漫想象',
+      touch: '身体亲近',
+      relation: '关系意愿',
+      openness: '未来开放'
+    };
+
+    const pairs = [
+      ['notice', '在人群里，我会自然留意有魅力的同性。', '在人群里，我会自然留意有魅力的异性。'],
+      ['notice', '遇到让我欣赏的同性，我可能会在之后继续想起对方。', '遇到让我欣赏的异性，我可能会在之后继续想起对方。'],
+      ['notice', '同性对我的特别关注，容易让我产生微妙的心动。', '异性对我的特别关注，容易让我产生微妙的心动。'],
+      ['notice', '当喜欢的同性靠近时，我可能会变得紧张或格外在意表现。', '当喜欢的异性靠近时，我可能会变得紧张或格外在意表现。'],
+      ['notice', '我能想起曾让我产生“她很特别”感觉的同性。', '我能想起曾让我产生“对方很特别”感觉的异性。'],
+
+      ['emotion', '相比普通朋友，我会期待与某位同性建立更独特的情感连接。', '相比普通朋友，我会期待与某位异性建立更独特的情感连接。'],
+      ['emotion', '我愿意向喜欢的同性分享脆弱、秘密和真实情绪。', '我愿意向喜欢的异性分享脆弱、秘密和真实情绪。'],
+      ['emotion', '当某位同性与别人明显亲近时，我可能会感到失落。', '当某位异性与别人明显亲近时，我可能会感到失落。'],
+      ['emotion', '被一位理解我的同性认真倾听，会让我感到特殊的满足。', '被一位理解我的异性认真倾听，会让我感到特殊的满足。'],
+      ['emotion', '我会希望某位同性优先想到我、主动关心我。', '我会希望某位异性优先想到我、主动关心我。'],
+
+      ['romance', '我能够想象和同性单独约会，并期待那种氛围。', '我能够想象和异性单独约会，并期待那种氛围。'],
+      ['romance', '看到女女爱情故事时，我容易把自己代入其中。', '看到男女爱情故事时，我容易把自己代入其中。'],
+      ['romance', '如果收到同性认真准备的浪漫告白，我可能会感到开心。', '如果收到异性认真准备的浪漫告白，我可能会感到开心。'],
+      ['romance', '我曾幻想过与同性牵手散步、庆祝纪念日或旅行。', '我曾幻想过与异性牵手散步、庆祝纪念日或旅行。'],
+      ['romance', '“同性伴侣”这个身份想象，会让我产生某种向往。', '“异性伴侣”这个身份想象，会让我产生某种向往。'],
+
+      ['touch', '在彼此有好感且明确同意时，我能接受与同性牵手或拥抱。', '在彼此有好感且明确同意时，我能接受与异性牵手或拥抱。'],
+      ['touch', '想象与喜欢的同性有更亲近的身体距离，会让我感到期待。', '想象与喜欢的异性有更亲近的身体距离，会让我感到期待。'],
+      ['touch', '同性温柔而尊重的身体接触，可能让我产生心动。', '异性温柔而尊重的身体接触，可能让我产生心动。'],
+      ['touch', '在安全、信任和自愿的前提下，我愿意探索与同性的亲密。', '在安全、信任和自愿的前提下，我愿意探索与异性的亲密。'],
+      ['touch', '我对同性之间亲密接触的想象并不排斥。', '我对异性之间亲密接触的想象并不排斥。'],
+
+      ['relation', '如果遇到合适的人，我愿意认真尝试与同性建立恋爱关系。', '如果遇到合适的人，我愿意认真尝试与异性建立恋爱关系。'],
+      ['relation', '我能想象把同性介绍给重要朋友，作为自己的伴侣。', '我能想象把异性介绍给重要朋友，作为自己的伴侣。'],
+      ['relation', '与同性长期相伴的生活图景，对我来说可能是温暖的。', '与异性长期相伴的生活图景，对我来说可能是温暖的。'],
+      ['relation', '面对现实压力时，我仍可能愿意认真经营一段同性关系。', '面对现实压力时，我仍可能愿意认真经营一段异性关系。'],
+      ['relation', '我愿意为了合适的同性伴侣学习沟通、处理冲突和承担责任。', '我愿意为了合适的异性伴侣学习沟通、处理冲突和承担责任。'],
+
+      ['openness', '如果发现自己喜欢同性，我愿意给这份感受一些空间。', '如果发现自己喜欢异性，我愿意给这份感受一些空间。'],
+      ['openness', '我愿意在不急于贴标签的情况下，了解自己对同性的感受。', '我愿意在不急于贴标签的情况下，了解自己对异性的感受。'],
+      ['openness', '未来若对同性心动，我愿意诚实面对，而不是立刻否定。', '未来若对异性心动，我愿意诚实面对，而不是立刻否定。'],
+      ['openness', '我认为自己有可能与合适的同性发展超越友情的关系。', '我认为自己有可能与合适的异性发展超越友情的关系。'],
+      ['openness', '对我来说，一个人的性别未必会完全决定我能否喜欢上对方。', '对我来说，异性身份本身可能增强我对一个人产生好感的可能。']
+    ];
+
+    const questions = [];
+    pairs.forEach((p, i) => {
+      const same = { dimension: p[0], target: 'same', text: p[1] };
+      const other = { dimension: p[0], target: 'other', text: p[2] };
+      if (i % 2 === 0) questions.push(same, other);
+      else questions.push(other, same);
+    });
+
+    const choices = [
+      ['A', '完全不符合', 0],
+      ['B', '比较不符合', 1],
+      ['C', '不确定／看情况', 2],
+      ['D', '比较符合', 3],
+      ['E', '非常符合', 4]
+    ];
+
+    const $ = id => document.getElementById(id);
+    const screens = ['homeScreen', 'quizScreen', 'loadingScreen', 'resultScreen'];
+    let current = 0;
+    let answers = Array(questions.length).fill(null);
+
+    function show(id) {
+      screens.forEach(s => $(s).classList.toggle('active', s === id));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function saveProgress() {
+      localStorage.setItem('heartMapProgress', JSON.stringify({ current, answers }));
+    }
+
+    function getSaved() {
+      try {
+        const data = JSON.parse(localStorage.getItem('heartMapProgress'));
+        return data && Array.isArray(data.answers) && data.answers.length === questions.length ? data : null;
+      } catch (_) { return null; }
+    }
+
+    function renderQuestion() {
+      const q = questions[current];
+      $('dimensionText').textContent = dimensions[q.dimension];
+      $('questionText').textContent = q.text;
+      $('countText').textContent = `${current + 1} / ${questions.length}`;
+      $('progressBar').style.width = `${((current + 1) / questions.length) * 100}%`;
+      $('backBtn').style.visibility = current === 0 ? 'hidden' : 'visible';
+      $('options').innerHTML = choices.map(([key, label, value]) => `
+        <button class="option ${answers[current] === value ? 'selected' : ''}" data-value="${value}">
+          <span class="dot">${key}</span><span>${label}</span>
+        </button>`).join('');
+      [...$('options').querySelectorAll('.option')].forEach(btn => {
+        btn.addEventListener('click', () => answer(Number(btn.dataset.value)));
+      });
+    }
+
+    function answer(value) {
+      answers[current] = value;
+      saveProgress();
+      if (current < questions.length - 1) {
+        current++;
+        renderQuestion();
+      } else {
+        finish();
+      }
+    }
+
+    function start(fresh = true) {
+      if (fresh) {
+        current = 0;
+        answers = Array(questions.length).fill(null);
+        saveProgress();
+      }
+      show('quizScreen');
+      renderQuestion();
+    }
+
+    function finish() {
+      show('loadingScreen');
+      setTimeout(() => {
+        const result = calculate();
+        renderResult(result);
+        localStorage.setItem('heartMapResult', JSON.stringify(result));
+        localStorage.removeItem('heartMapProgress');
+        show('resultScreen');
+      }, 950);
+    }
+
+    function calculate() {
+      const scores = {};
+      Object.keys(dimensions).forEach(d => scores[d] = { same: [], other: [] });
+      questions.forEach((q, i) => scores[q.dimension][q.target].push(answers[i] ?? 0));
+      const averages = {};
+      let sameTotal = 0, otherTotal = 0;
+      Object.entries(scores).forEach(([d, sides]) => {
+        const same = sides.same.reduce((a,b) => a+b, 0) / sides.same.length;
+        const other = sides.other.reduce((a,b) => a+b, 0) / sides.other.length;
+        averages[d] = { same, other };
+        sameTotal += same;
+        otherTotal += other;
+      });
+      sameTotal /= Object.keys(dimensions).length;
+      otherTotal /= Object.keys(dimensions).length;
+      return {
+        same: Math.round(sameTotal * 25),
+        other: Math.round(otherTotal * 25),
+        averages,
+        type: classify(sameTotal, otherTotal)
+      };
+    }
+
+    function classify(same, other) {
+      const diff = same - other;
+      if (same < 1.35 && other < 1.35) return 'quiet';
+      if (same >= 2.4 && other >= 2.4 && Math.abs(diff) < .65) return 'both';
+      if (diff >= .7) return 'same';
+      if (diff <= -.7) return 'other';
+      return 'fluid';
+    }
+
+    const resultCopy = {
+      same: {
+        title: '你的心动更容易向同性方向聚焦',
+        desc: '在这组描述中，你对同性相关的心动、靠近或关系想象表现出更强共鸣。这可能是一条值得继续观察的线索，但不需要立刻用某个标签概括自己。',
+        reflection: '可以回想：哪些具体的人、时刻和关系让你感到真实而自在？比起反复追问“我到底是什么”，先允许自己承认“我确实有过这样的感受”，可能更接近你此刻需要的答案。'
+      },
+      other: {
+        title: '你的心动更容易向异性方向聚焦',
+        desc: '在这组描述中，你对异性相关的心动、靠近或关系想象表现出更强共鸣。这呈现的是你当下较熟悉的方向，并不要求你排除未来出现的其他可能。',
+        reflection: '你可以继续留意：这份吸引来自真实的喜欢，还是熟悉的关系脚本和外界期待？没有必要怀疑每一次心动，只要让自己的选择更多出于感受，而不是“应该”。'
+      },
+      both: {
+        title: '你的心动呈现出双向而丰富的可能',
+        desc: '你对同性和异性相关的情感或关系想象都有较明显共鸣。对你来说，一个人的性别可能不是决定心动的唯一条件。',
+        reflection: '不必强迫两种方向完全对等，也不需要用恋爱经历证明任何身份。你可以观察自己被什么样的性格、连接和相处方式吸引，再选择让你感到安全、尊重和自由的关系。'
+      },
+      fluid: {
+        title: '你的心动仍保留着开放的空间',
+        desc: '同性与异性方向的差距并不明显，或你的不同维度呈现出交错的倾向。感情、浪漫和身体亲近本来就不一定同时指向同一个方向。',
+        reflection: '暂时“不确定”也是完整而有效的答案。你可以记录真实发生的心动，而不是通过想象逼自己得出结论。随着经历增加，你可能更清楚，也可能继续保持开放——两者都可以。'
+      },
+      quiet: {
+        title: '你的心动信号目前比较安静',
+        desc: '你对两种方向的多数描述共鸣都不强。这可能与你当前没有遇到特定的人、对关系兴趣较低，或还不习惯这些想象有关。',
+        reflection: '不需要因为“别人都在恋爱”而制造答案。把注意力放回自己的生活、身体感受和舒服的连接方式。未来是否出现更明确的心动，都不会影响你此刻的完整。'
+      }
+    };
+
+    function renderResult(result) {
+      const copy = resultCopy[result.type];
+      $('resultTitle').textContent = copy.title;
+      $('resultDesc').textContent = copy.desc;
+      $('sameScore').textContent = result.same;
+      $('otherScore').textContent = result.other;
+      $('reflection').textContent = copy.reflection;
+      $('bars').innerHTML = Object.entries(dimensions).map(([key, label]) => {
+        const s = Math.round(result.averages[key].same * 25);
+        const o = Math.round(result.averages[key].other * 25);
+        return `<div class="bar-row"><div class="bar-label">${label}</div><div class="tracks">
+          <div class="track" title="同性方向 ${s}"><i class="fill same" style="width:${s}%"></i></div>
+          <div class="track" title="异性方向 ${o}"><i class="fill other" style="width:${o}%"></i></div>
+        </div></div>`;
+      }).join('');
+    }
+
+    function resultSummary() {
+      const result = JSON.parse(localStorage.getItem('heartMapResult') || 'null');
+      if (!result) return '';
+      const copy = resultCopy[result.type];
+      const lines = Object.entries(dimensions).map(([key, label]) => {
+        const s = Math.round(result.averages[key].same * 25);
+        const o = Math.round(result.averages[key].other * 25);
+        return `${label}：同性 ${s} / 异性 ${o}`;
+      });
+      return `《我的心动方向地图》\n${copy.title}\n同性方向综合共鸣：${result.same}/100\n异性方向综合共鸣：${result.other}/100\n${lines.join('\n')}\n\n仅为趣味性自我探索，不是性取向诊断。`;
+    }
+
+    $('startBtn').addEventListener('click', () => start(true));
+    $('resumeBtn').addEventListener('click', () => {
+      const saved = getSaved();
+      if (saved) { current = saved.current; answers = saved.answers; start(false); }
+    });
+    $('backBtn').addEventListener('click', () => { if (current > 0) { current--; saveProgress(); renderQuestion(); } });
+    $('aboutBtn').addEventListener('click', () => $('aboutModal').classList.add('show'));
+    $('closeAbout').addEventListener('click', () => $('aboutModal').classList.remove('show'));
+    $('aboutModal').addEventListener('click', e => { if (e.target === $('aboutModal')) $('aboutModal').classList.remove('show'); });
+    $('printBtn').addEventListener('click', () => window.print());
+    $('restartBtn').addEventListener('click', () => {
+      if (confirm('重新测试会清除当前结果，确定继续吗？')) {
+        localStorage.removeItem('heartMapResult');
+        start(true);
+      }
+    });
+    $('copyBtn').addEventListener('click', async () => {
+      const text = resultSummary();
+      try { await navigator.clipboard.writeText(text); }
+      catch (_) {
+        const area = document.createElement('textarea'); area.value = text; document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove();
+      }
+      $('toast').classList.add('show');
+      setTimeout(() => $('toast').classList.remove('show'), 1600);
+    });
+
+    const saved = getSaved();
+    $('resumeBtn').hidden = !saved;
+    const previousResult = (() => { try { return JSON.parse(localStorage.getItem('heartMapResult')); } catch (_) { return null; } })();
+    if (previousResult && previousResult.averages) {
+      const resultBtn = document.createElement('button');
+      resultBtn.className = 'btn btn-text';
+      resultBtn.textContent = '查看上一次结果';
+      resultBtn.addEventListener('click', () => { renderResult(previousResult); show('resultScreen'); });
+      $('homeScreen').querySelector('.actions').appendChild(resultBtn);
+    }
+  </script>
+</body>
+</html>
